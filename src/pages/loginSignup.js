@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import 'mdb-react-ui-kit/dist/css/mdb.min.css';
 import 'mdb-react-ui-kit/dist/mdb-react-ui-kit.esm.js';
 import { useNavigate } from 'react-router-dom';
@@ -12,6 +12,21 @@ export default function LoginSignUp() {
     const [loginClassName,setLoginClassName]=useState("nav-link active");
     const [error,setError]=useState("");
     const navigate = useNavigate();
+
+    useEffect(() => {
+      checkUserLogin();
+    }, []);
+  const checkUserLogin=() =>{
+    const userData = JSON.parse(localStorage.getItem('user'));
+    if(userData){
+      if(userData.role==="customer"){
+        navigate('/home');
+      }
+      else if(userData.role==="member"){
+        navigate('/memberHome');
+    }
+    }
+  };
 
 
     const handleRegister=() =>{
@@ -64,7 +79,9 @@ export default function LoginSignUp() {
           const response = await axios.post('http://localhost:8080/supply-chain/signUp', data);
           console.log('Response:', response.data);
           if(response.data.username===data.name){
-            localStorage.setItem('userId', data.userId);
+            const result = await axios.get(`http://localhost:8080/supply-chain/user/${response.data.userId}`);
+            console.log('Response:', result.data);
+            localStorage.setItem('user',JSON.stringify(result.data));
             navigate('/home');
           }
         } catch (error) {
@@ -91,10 +108,12 @@ export default function LoginSignUp() {
         console.log(signInData);
 
         try {
-            const response = await axios.post('http://localhost:8080/supply-chain/login', data);
+            const response = await axios.post('http://localhost:8080/supply-chain/login', signInData);
           console.log('Response:', response.data);
           if(response.data.status){
-            localStorage.setItem('userId', data.userId);
+            const result = await axios.get(`http://localhost:8080/supply-chain/user/${response.data.userId}`);
+            console.log('Response:', result.data);
+            localStorage.setItem('user',JSON.stringify(result.data));
             if(response.data.role==="customer"){
                  navigate('/home');
             }
